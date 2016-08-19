@@ -57,7 +57,7 @@ def write_check(amount):
 
     import decimal
 
-    amount = decimal.Decimal(67213.21)
+    amount = decimal.Decimal('67213.21')
     write_check(amount)
 
     ===> 'sixty seven thousand two hundred thirteen and 21/100 dollars'
