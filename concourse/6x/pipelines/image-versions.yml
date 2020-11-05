@@ -1,0 +1,50 @@
+---
+# This pipeline builds a docker image in one job and consumes
+# it in another, using `passed` to get only image versions
+# that came from the `build-the-image` job. This was done as a
+# test to make sure that no other versions got through to the
+# `get-the-image` job, even when newer images were pushed to
+# the repo.
+resources:
+- name: image
+  type: docker-image
+  source:
+    repository: cloudboss/test-image
+    username: cloudboss
+    password: '860zV8pJ@h&03xb'
+- name: git-repo
+  type: git
+  source:
+    uri: https://github.com/rjosephwright/tk-base.git
+    branch: dockerfile
+jobs:
+- name: build-the-image
+  public: true
+  plan:
+  - get: git-repo
+    trigger: true
+  - task: version
+    config:
+      platform: linux
+      image_resource:
+        type: docker-image
+        source:
+          repository: python
+          tag: 3-slim
+      outputs:
+      - name: version
+      run:
+        path: sh
+        args:
+        - -c
+        - date +%s > version/version
+  - put: image
+    params:
+      build: git-repo
+      tag_file: version/version
+- name: get-the-image
+  public: true
+  plan:
+  - get: image
+    trigger: true
+    passed: [build-the-image]
